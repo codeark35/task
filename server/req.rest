@@ -1,0 +1,20 @@
+POST http://localhost:3035/v1/api/user/create HTTP/1.1
+Content-Type: application/json
+
+{
+ "name": "prueba",
+  "email": "codeark35@gmail.com",
+  "password": "123456",
+  "confPassword": "123456",
+  "role": "admin",
+
+} 
+###Logeo 
+POST http://localhost:3035/v1/api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "codeark35@gmail.com",
+  "password": "123456",
+
+} 
