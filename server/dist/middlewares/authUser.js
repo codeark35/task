@@ -22,7 +22,7 @@ const verifyUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             return res.status(401).json({ msg: "Token no encontrado" });
         }
         const token = headerToken.split(" ")[1];
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || "prprpsww3");
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue");
         req.user = decoded;
         // Verificar si el usuario existe en la base de datos
         const user = yield user_1.User.findOne({

@@ -5,32 +5,50 @@ import { User } from "../models/user";
 import dotenv from "dotenv";
 
 dotenv.config();
-// Login Controller
+
+interface RegisterRequestBody {
+  name: string;
+  email: string;
+  last_name: string;
+  password: string;
+  confPassword: string;
+  role?: string;
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue";
+const SESSION_EXPIRED = process.env.SESSION_EXPIRED || "1h";
+
+const handleError = (res: Response, message: string, status: number = 500) => {
+  console.error(message);
+  return res.status(status).json({ message });
+};
+
+const generateToken = (user: User) => {
+  return jwt.sign(
+    {
+      name: user.name,
+      email: user.email,
+      uuid: user.uuid,
+      role: user.role,
+    },
+    JWT_SECRET,
+    { expiresIn: SESSION_EXPIRED }
+  );
+};
+
 export const verifyToken = async (req: Request, res: Response) => {
   const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
-  // Comprobar si el token es undefined
   if (!token) {
-    console.warn("No token provided in request.");
-    return res.status(401).json({ message: "No token provided" });
+    return handleError(res, "No token provided", 401);
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue"
-    ) as jwt.JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+    const userFound = await User.findOne({ where: { uuid: decoded.uuid } });
 
-    const userFound = await User.findOne({
-      where: {
-        uuid: decoded.uuid,
-      },
-    });
-
-    // Comprobar si se encontró el usuario
     if (!userFound) {
-      console.warn("Invalid token: user not found.");
-      return res.status(401).json({ message: "Invalid token" });
+      return handleError(res, "Invalid token: user not found", 401);
     }
 
     return res.json({
@@ -39,25 +57,22 @@ export const verifyToken = async (req: Request, res: Response) => {
       email: userFound.email,
     });
   } catch (error) {
-    console.error("Error decoding token:", error);
-    return res.status(401).json({ message: "Invalid token" });
+    return handleError(res, "Invalid token", 401);
   }
 };
 
 export const register = async (req: Request, res: Response) => {
+  const { name, email, last_name, password, confPassword, role = "admin" } = req.body as RegisterRequestBody;
+
+  if (!name || !last_name || !email || !password || !confPassword) {
+    return res.status(400).json({ msg: "Todos los campos son obligatorios." });
+  }
+
+  if (password !== confPassword) {
+    return res.status(400).json({ msg: "Las contraseñas no coinciden." });
+  }
+
   try {
-    const { name, email, last_name, password, confPassword, role } = req.body;
-
-    // Validación de datos
-    if (!name || !last_name || !email || !password || !confPassword) {
-      return res.status(400).json({ msg: "Todos los campos son obligatorios." });
-    }
-
-    if (password !== confPassword) {
-      return res.status(400).json({ msg: "Las contraseñas no coinciden." });
-    }
-
-    // Verifica si el usuario ya existe
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ msg: "El correo ya está registrado." });
@@ -71,37 +86,44 @@ export const register = async (req: Request, res: Response) => {
       last_name,
       password: hashPassword,
       role,
-    });
+    } as User);
 
-    res.status(201).json({ msg: "Usuario registrado correctamente", user: newUser });
+    const token = generateToken(newUser);
+
+    return res.status(201).json({ 
+      msg: "Usuario registrado correctamente", 
+      user: {
+        uuid: newUser.uuid,
+        name: newUser.name,
+        last_name: newUser.last_name,
+        email: newUser.email,
+        role: newUser.role,
+      }, 
+      token 
+    });
   } catch (error: any) {
-    res.status(500).json({ msg: error.message });
+    return handleError(res, error.message);
   }
 };
-export const login = async (req: Request, res: Response) => {
-  try {
-    const userFound = await User.findOne({
-      where: {
-        email: req.body.email,
-      },
-    });
-    if (!userFound)
-      return res.status(404).json({ msg: "Usuario no encontrado" });
-    const match = await argon2.verify(userFound.password, req.body.password);
-    if (!match) return res.status(400).json({ msg: "Contraseña incorrecta" });
 
-    const token = jwt.sign(
-      {
-        name: userFound.name,
-        email: userFound.email,
-        uuid: userFound.uuid,
-        role: userFound.role,
-      },
-      process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue",
-      {
-        expiresIn: process.env.SESSION_EXPIRED,
-      }
-    );
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  try {
+    const userFound = await User.findOne({ where: { email } });
+
+    if (!userFound) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    const match = await argon2.verify(userFound.password, password);
+
+    if (!match) {
+      return res.status(400).json({ msg: "Contraseña incorrecta" });
+    }
+
+    const token = generateToken(userFound);
+
     return res.status(200).json({
       token,
       user: {
@@ -113,18 +135,15 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    return res.status(500).json({ message: error.message });
+    return handleError(res, error.message);
   }
 };
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    // Eliminar el token de la respuesta y del cliente
     res.clearCookie("token");
-
     return res.status(200).json({ message: "Desconectado exitosamente" });
   } catch (error) {
-    // Manejar cualquier error interno del servidor
-    return res.status(500).json({ message: "Error interno del servidor" });
+    return handleError(res, "Error interno del servidor");
   }
 };

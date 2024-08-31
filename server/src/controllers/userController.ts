@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { Sequelize } from "sequelize-typescript";
-import argon2 from "argon2";
 import { User } from "../models/user";
 
 export const getUsersAll = async (req: Request, res: Response) => {

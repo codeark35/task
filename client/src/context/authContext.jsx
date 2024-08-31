@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (errors.length > 0) {
+    if (errors?.length > 0) {
       const timer = setTimeout(() => {
         setErrors([]);
       }, 5000);
@@ -27,11 +27,13 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (user) => {
     try {
+
       const res = await registerRequest(user);
-      if (res.status === 200) {
+      if (res.status === 201) {
         Cookies.set("token", res.data.token); // Almacena el token en una cookie
         setUser(res.data.user);
         setIsAuthenticated(true);
+        console.log(res.data.user);
         
       }
     } catch (error) {
@@ -72,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   
       try {
         const res = await verifyTokenRequest(token);
-        console.log("Token verification response:", res);
+        console.log("Token verification response:", res.statusText);
   
         // Verificar si la respuesta contiene datos
         if (!res.data) {

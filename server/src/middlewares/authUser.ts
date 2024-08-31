@@ -2,6 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user";
 
+// Extend the Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: DecodedToken;
+    }
+  }
+}
+
 interface DecodedToken {
   uuid: string;
 }

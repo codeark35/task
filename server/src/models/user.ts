@@ -1,15 +1,16 @@
-import { Table, Column, Model, DataType } from "sequelize-typescript";
+import { Table, Column, Model, DataType, TableOptions } from "sequelize-typescript";
 
 @Table({
-  timestamps: true,
   tableName: "users",
+  timestamps: true,
   modelName: "User",
-})
-export class User extends Model {
+} as TableOptions)
+export class User extends Model<User> {
+
   @Column({
-    primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
+    primaryKey: true,
     allowNull: false,
     validate: {
       notEmpty: true,

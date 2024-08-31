@@ -18,31 +18,26 @@ const argon2_1 = __importDefault(require("argon2"));
 const user_1 = require("../models/user");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const JWT_SECRET = process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue";
-const SESSION_EXPIRED = process.env.SESSION_EXPIRED || "1h";
-const handleError = (res, message, status = 500) => {
-    console.error(message);
-    return res.status(status).json({ message });
-};
-const generateToken = (user) => {
-    return jsonwebtoken_1.default.sign({
-        name: user.name,
-        email: user.email,
-        uuid: user.uuid,
-        role: user.role,
-    }, JWT_SECRET, { expiresIn: SESSION_EXPIRED });
-};
+// Login Controller
 const verifyToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const token = req.cookies.token || ((_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1]);
+    // Comprobar si el token es undefined
     if (!token) {
-        return handleError(res, "No token provided", 401);
+        console.warn("No token provided in request.");
+        return res.status(401).json({ message: "No token provided" });
     }
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        const userFound = yield user_1.User.findOne({ where: { uuid: decoded.uuid } });
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue");
+        const userFound = yield user_1.User.findOne({
+            where: {
+                uuid: decoded.uuid,
+            },
+        });
+        // Comprobar si se encontró el usuario
         if (!userFound) {
-            return handleError(res, "Invalid token: user not found", 401);
+            console.warn("Invalid token: user not found.");
+            return res.status(401).json({ message: "Invalid token" });
         }
         return res.json({
             uuid: userFound.uuid,
@@ -51,19 +46,22 @@ const verifyToken = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (error) {
-        return handleError(res, "Invalid token", 401);
+        console.error("Error decoding token:", error);
+        return res.status(401).json({ message: "Invalid token" });
     }
 });
 exports.verifyToken = verifyToken;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, email, last_name, password, confPassword, role = "admin" } = req.body;
-    if (!name || !last_name || !email || !password || !confPassword) {
-        return res.status(400).json({ msg: "Todos los campos son obligatorios." });
-    }
-    if (password !== confPassword) {
-        return res.status(400).json({ msg: "Las contraseñas no coinciden." });
-    }
     try {
+        const { name, email, last_name, password, confPassword, role } = req.body;
+        // Validación de datos
+        if (!name || !last_name || !email || !password || !confPassword) {
+            return res.status(400).json({ msg: "Todos los campos son obligatorios." });
+        }
+        if (password !== confPassword) {
+            return res.status(400).json({ msg: "Las contraseñas no coinciden." });
+        }
+        // Verifica si el usuario ya existe
         const existingUser = yield user_1.User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ msg: "El correo ya está registrado." });
@@ -76,36 +74,33 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             password: hashPassword,
             role,
         });
-        const token = generateToken(newUser);
-        return res.status(201).json({
-            msg: "Usuario registrado correctamente",
-            user: {
-                uuid: newUser.uuid,
-                name: newUser.name,
-                last_name: newUser.last_name,
-                email: newUser.email,
-                role: newUser.role,
-            },
-            token
-        });
+        res.status(201).json({ msg: "Usuario registrado correctamente", user: newUser });
     }
     catch (error) {
-        return handleError(res, error.message);
+        res.status(500).json({ msg: error.message });
     }
 });
 exports.register = register;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
     try {
-        const userFound = yield user_1.User.findOne({ where: { email } });
-        if (!userFound) {
+        const userFound = yield user_1.User.findOne({
+            where: {
+                email: req.body.email,
+            },
+        });
+        if (!userFound)
             return res.status(404).json({ msg: "Usuario no encontrado" });
-        }
-        const match = yield argon2_1.default.verify(userFound.password, password);
-        if (!match) {
+        const match = yield argon2_1.default.verify(userFound.password, req.body.password);
+        if (!match)
             return res.status(400).json({ msg: "Contraseña incorrecta" });
-        }
-        const token = generateToken(userFound);
+        const token = jsonwebtoken_1.default.sign({
+            name: userFound.name,
+            email: userFound.email,
+            uuid: userFound.uuid,
+            role: userFound.role,
+        }, process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue", {
+            expiresIn: process.env.SESSION_EXPIRED,
+        });
         return res.status(200).json({
             token,
             user: {
@@ -118,17 +113,19 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     catch (error) {
-        return handleError(res, error.message);
+        return res.status(500).json({ message: error.message });
     }
 });
 exports.login = login;
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Eliminar el token de la respuesta y del cliente
         res.clearCookie("token");
         return res.status(200).json({ message: "Desconectado exitosamente" });
     }
     catch (error) {
-        return handleError(res, "Error interno del servidor");
+        // Manejar cualquier error interno del servidor
+        return res.status(500).json({ message: "Error interno del servidor" });
     }
 });
 exports.logout = logout;

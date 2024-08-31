@@ -12,9 +12,9 @@ let User = class User extends sequelize_typescript_1.Model {
 };
 __decorate([
     (0, sequelize_typescript_1.Column)({
-        primaryKey: true,
         type: sequelize_typescript_1.DataType.UUID,
         defaultValue: sequelize_typescript_1.DataType.UUIDV4,
+        primaryKey: true,
         allowNull: false,
         validate: {
             notEmpty: true,
@@ -65,8 +65,8 @@ __decorate([
 ], User.prototype, "role", void 0);
 User = __decorate([
     (0, sequelize_typescript_1.Table)({
-        timestamps: true,
         tableName: "users",
+        timestamps: true,
         modelName: "User",
     })
 ], User);
