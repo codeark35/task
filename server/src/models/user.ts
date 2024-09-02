@@ -1,4 +1,5 @@
-import { Table, Column, Model, DataType, TableOptions } from "sequelize-typescript";
+import { Table, Column, Model, DataType,TableOptions, HasMany } from "sequelize-typescript";
+import { Task } from "./task";
 
 @Table({
   tableName: "users",
@@ -58,4 +59,8 @@ export class User extends Model<User> {
     },
   })
   role!: string;
+
+
+  @HasMany(() => Task)
+  tasks!: Task[];
 }

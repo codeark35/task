@@ -6,72 +6,49 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
+exports.Task = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
-const task_1 = require("./task");
-let User = class User extends sequelize_typescript_1.Model {
+const user_1 = require("./user");
+let Task = class Task extends sequelize_typescript_1.Model {
 };
 __decorate([
     (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.STRING,
+        allowNull: false,
+    })
+], Task.prototype, "title", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.STRING,
+        allowNull: false,
+        validate: {
+            notEmpty: true,
+        },
+    })
+], Task.prototype, "description", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.DATE,
+        allowNull: false,
+        validate: {
+            notEmpty: true,
+        },
+    })
+], Task.prototype, "date", void 0);
+__decorate([
+    (0, sequelize_typescript_1.ForeignKey)(() => user_1.User),
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.UUID,
-        defaultValue: sequelize_typescript_1.DataType.UUIDV4,
-        primaryKey: true,
-        allowNull: false,
-        validate: {
-            notEmpty: true,
-        },
-    })
-], User.prototype, "uuid", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
         allowNull: false,
     })
-], User.prototype, "email", void 0);
+], Task.prototype, "userId", void 0);
 __decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: false,
-        },
-    })
-], User.prototype, "name", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
-        allowNull: true,
-        validate: {
-            notEmpty: false,
-        },
-    })
-], User.prototype, "last_name", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: true,
-        },
-    })
-], User.prototype, "password", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: true,
-        },
-    })
-], User.prototype, "role", void 0);
-__decorate([
-    (0, sequelize_typescript_1.HasMany)(() => task_1.Task)
-], User.prototype, "tasks", void 0);
-User = __decorate([
+    (0, sequelize_typescript_1.BelongsTo)(() => user_1.User)
+], Task.prototype, "user", void 0);
+Task = __decorate([
     (0, sequelize_typescript_1.Table)({
-        tableName: "users",
+        tableName: "tasks",
         timestamps: true,
-        modelName: "User",
     })
-], User);
-exports.User = User;
+], Task);
+exports.Task = Task;

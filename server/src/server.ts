@@ -2,8 +2,10 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import routerUser from "./routes/userRoute";
+import routerTask from "./routes/taskRoute";
 import routerAuth from "./routes/authRoute";
 import db from "./connections/db-connection";
+import { setupAssociations } from "./models/associations";
 
 class Server {
   private app: Application;
@@ -32,6 +34,7 @@ class Server {
     try {
       await db.sync();
       console.log("***Conexion establecida con la base de datos***");
+      setupAssociations();
     } catch (error) {
       console.log(error);
     }
@@ -48,6 +51,7 @@ class Server {
     
     this.app.use(cookieParser()); // Agrega esto antes de tus rutas
     this.app.use("/v1/api/", routerUser);
+    this.app.use("/v1/api/", routerTask);
     this.app.use("/v1/api/auth/", routerAuth);
 
     this.app.use(
