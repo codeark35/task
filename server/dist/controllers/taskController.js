@@ -39,24 +39,32 @@ const getTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getTasks = getTasks;
 // Create a new task
 const createTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { title, description, date } = req.body;
+    var _a;
+    const { title, description, date, userId } = req.body;
+    if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.uuid)) {
+        return handleError(res, "User not authenticated or UUID not available", 401);
+    }
+    console.log(req.user.uuid);
     try {
         const newTask = yield task_1.Task.create({
             title,
             description,
             date,
+            userId: req.user.uuid
         });
         return res.status(201).json({
             msg: "Tarea creada correctamente",
             task: {
+                id: newTask.id,
                 title: newTask.title,
                 description: newTask.description,
                 date: newTask.date,
+                userId: newTask.userId
             },
         });
     }
     catch (error) {
-        return handleError(res, error.message);
+        return handleError(res, `Error al crear la tarea: ${error.message}`);
     }
 });
 exports.createTask = createTask;

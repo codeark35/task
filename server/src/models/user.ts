@@ -1,4 +1,11 @@
-import { Table, Column, Model, DataType,TableOptions, HasMany } from "sequelize-typescript";
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  TableOptions,
+  HasMany,
+} from "sequelize-typescript";
 import { Task } from "./task";
 
 @Table({
@@ -7,7 +14,6 @@ import { Task } from "./task";
   modelName: "User",
 } as TableOptions)
 export class User extends Model<User> {
-
   @Column({
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
@@ -59,7 +65,6 @@ export class User extends Model<User> {
     },
   })
   role!: string;
-
 
   @HasMany(() => Task)
   tasks!: Task[];

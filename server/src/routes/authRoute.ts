@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {login, logout, register, verifyToken } from "../controllers/authController";
-import { verifyUser } from "../middlewares/authUser";
+
 // Create a new router for authentication routes
 const routerAuth = Router();
 

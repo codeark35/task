@@ -16,8 +16,5 @@ const db = new sequelize_typescript_1.Sequelize({
     dialect: "mysql",
     port: Number(process.env.DB_PORT),
     models: [user_1.User, task_1.Task],
-    define: {
-        underscored: true, // This will use snake_case for database column names
-    },
 });
 exports.default = db;

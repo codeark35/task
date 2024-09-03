@@ -40,6 +40,7 @@ __decorate([
     (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.UUID,
         allowNull: false,
+        field: 'userId',
     })
 ], Task.prototype, "userId", void 0);
 __decorate([
@@ -49,6 +50,7 @@ Task = __decorate([
     (0, sequelize_typescript_1.Table)({
         tableName: "tasks",
         timestamps: true,
+        modelName: "Task"
     })
 ], Task);
 exports.Task = Task;

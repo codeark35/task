@@ -33,6 +33,7 @@ export function TaskProvider({ children }) {
   };
 
   const createTask = async (task) => {
+    console.log(task);
     try {
       const res = await createTaskRequest(task);
       console.log(res.data);

@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize-typescript";
 import { User } from "../models/user";
 
 export const getUsersAll = async (req: Request, res: Response) => {
-  try {
+/*   try {
     const response = await User.findAll({
       attributes: [
         "uuid",
@@ -21,11 +21,11 @@ export const getUsersAll = async (req: Request, res: Response) => {
     res.status(200).json(response);
   } catch (error: any) {
     res.status(500).json({ msg: error.message });
-  }
+  } */
 };
 
 export const getUser = async (req: Request, res: Response) => {
-  try {
+/*   try {
     const response = await User.findOne({
       attributes: [
         "uuid",
@@ -46,6 +46,6 @@ export const getUser = async (req: Request, res: Response) => {
     res.status(200).json(response);
   } catch (error: any) {
     res.status(500).json({ msg: error.message });
-  }
+  } */
 };
 

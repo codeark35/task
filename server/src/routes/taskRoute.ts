@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { verifyUser } from "../middlewares/authUser";
 import { getTasks, createTask } from "../controllers/taskController";
 
 
@@ -6,7 +7,7 @@ const routerTask = Router();
 
 routerTask.get("/tasks",  getTasks);
 
-routerTask.post("/tasks",   createTask);
+routerTask.post("/task/create", verifyUser, createTask);
 
 /* routerTask.get("/tasks/:id",  getTask);
 

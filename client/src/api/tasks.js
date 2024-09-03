@@ -1,8 +1,9 @@
-import axios from "axios";
 
-export const getTasksRequest = async () => axios.get("/tasks");
+import api from "./api"
 
-export const createTaskRequest = async (task) => axios.post("/tasks", task);
+export const getTasksRequest = () => api.get('/tasks');
+
+export const createTaskRequest = (task) => api.post('/task/create', task);
 
 export const updateTaskRequest = async (task) =>
   axios.put(`/tasks/${task._id}`, task);

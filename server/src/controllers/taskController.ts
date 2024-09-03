@@ -1,12 +1,20 @@
 import { Request, Response } from "express";
 import { Sequelize, DataTypes } from "sequelize";
 import { Task } from "../models/task";
+import { User } from "../models/user";
 
 // Interface for the create request body
 interface CreateRequestBody {
   title: string;
   description: string;
   date: Date;
+  userId: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    uuid: string;
+  };
 }
 
 // Error handling function
@@ -36,24 +44,34 @@ export const getTasks = async (req: Request, res: Response) => {
 };
 
 // Create a new task
-export const createTask = async (req: Request, res: Response) => {
-  const { title, description, date } = req.body as CreateRequestBody;
+export const createTask = async (req: AuthenticatedRequest, res: Response) => {
+  const { title, description, date, userId } = req.body as CreateRequestBody;
+
+  if (!req.user?.uuid) {
+    return handleError(res, "User not authenticated or UUID not available", 401);
+  }
+  console.log(req.user.uuid)
+
   try {
     const newTask = await Task.create({
       title,
       description,
       date,
+      userId: req.user.uuid
     } as Task);
+ 
 
     return res.status(201).json({
       msg: "Tarea creada correctamente",
       task: {
+        id: newTask.id, // Assuming Task model has an id field
         title: newTask.title,
         description: newTask.description,
         date: newTask.date,
+        userId: newTask.userId
       },
     });
   } catch (error: any) {
-    return handleError(res, error.message);
+    return handleError(res, `Error al crear la tarea: ${error.message}`);
   }
 };

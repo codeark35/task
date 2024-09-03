@@ -49,8 +49,14 @@ class Server {
         });
     }
     midlewares() {
-        this.app.use((0, cors_1.default)({ origin: "http://localhost:5173" })); // Permite todas las solicitudes desde cualquier origen
+        this.app.use((0, cors_1.default)({
+            origin: "http://localhost:5173",
+            credentials: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ["Content-Type", "Authorization"],
+        }));
         this.app.use(express_1.default.json());
+        // this.app.use(verifyUser); 
     }
     routes() {
         this.app.get("/", (req, res) => {

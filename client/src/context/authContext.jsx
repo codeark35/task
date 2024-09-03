@@ -1,6 +1,5 @@
 import { useEffect, useState, createContext, useContext } from "react";
 import { loginRequest, registerRequest, verifyTokenRequest } from "../api/auth";
-import Cookies from "js-cookie";
 
 const AuthContext = createContext();
 
@@ -27,25 +26,21 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (user) => {
     try {
-
       const res = await registerRequest(user);
       if (res.status === 201) {
-        Cookies.set("token", res.data.token); // Almacena el token en una cookie
-        setUser(res.data.user);
+        localStorage.setItem("token", res.token);
+        setUser(res.user);
         setIsAuthenticated(true);
-        console.log(res.data.user);
-        
       }
     } catch (error) {
-      console.log(error.response.data);
-      setErrors(error.response.data.message);
+      console.log(error.response?.data);
+      setErrors(error.response?.data?.message || "Error en el registro");
     }
   };
 
   const signin = async (user) => {
     try {
       const res = await loginRequest(user);
-      Cookies.set("token", res.data.token); // Almacena el token en una cookie
       setUser(res.data.user);
       setIsAuthenticated(true);
     } catch (error) {
@@ -55,46 +50,43 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    Cookies.remove("token");
+    localStorage.removeItem("token");
     setUser(null);
     setIsAuthenticated(false);
   };
 
+  const checkAuth = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userData = await verifyTokenRequest();
+      if (userData) {
+        setIsAuthenticated(true);
+        setUser(userData);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+        localStorage.removeItem("token");
+      }
+    } catch (error) {
+      console.error("Error verifying token: ", error);
+      setIsAuthenticated(false);
+      setUser(null);
+      localStorage.removeItem("token");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const checkLogin = async () => {
-      const token = Cookies.get("token");
-  
-      // Verificar si el token existe
-      if (!token) {
-        console.warn("No token found in cookies.");
-        setIsAuthenticated(false);
-        setLoading(false);
-        return;
-      }
-  
-      try {
-        const res = await verifyTokenRequest(token);
-        console.log("Token verification response:", res.statusText);
-  
-        // Verificar si la respuesta contiene datos
-        if (!res.data) {
-          console.warn("Token verification failed, no data received.");
-          setIsAuthenticated(false);
-        } else {
-          setIsAuthenticated(true);
-          setUser(res.data);
-        }
-      } catch (error) {
-        console.error("Error verifying token: ", error);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    checkLogin();
+    checkAuth();
   }, []);
-  
 
   return (
     <AuthContext.Provider
@@ -106,6 +98,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         errors,
         loading,
+        checkAuth,
       }}
     >
       {children}
