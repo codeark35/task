@@ -15,24 +15,24 @@ export function Navbar() {
         {isAuthenticated ? (
           <>
             <li>
-              Welcome {user?.name }
+              Bienvenido {user?.name }
             </li>
             <li>
-              <ButtonLink to="/add-task">Add Task</ButtonLink>
+              <ButtonLink to="/add-task">Agregar Tarea</ButtonLink>
             </li>
             <li>
               <Link to="/" onClick={() => logout()}>
-                Logout
+              Cerrar sesión
               </Link>
             </li>
           </>
         ) : (
           <>
             <li>
-              <ButtonLink to="/login">Login</ButtonLink>
+              <ButtonLink to="/login">Acceso</ButtonLink>
             </li>
             <li>
-              <ButtonLink to="/register">Register</ButtonLink>
+              <ButtonLink to="/register">Registro</ButtonLink>
             </li>
           </>
         )}
