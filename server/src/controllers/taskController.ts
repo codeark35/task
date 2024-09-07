@@ -38,13 +38,41 @@ export const getTasks = async (req: AuthenticatedRequest, res: Response) => {
         "id",
         "title",
         "description",
-        [
-          Sequelize.fn("date_format", Sequelize.col("date"), "%d-%m-%Y"),
-          "date",
-        ],
+        "date",
       ],
       where: {
         userId: req.user.uuid,
+      },
+    });
+
+    return res.status(200).json(response);
+  } catch (error: any) {
+    return handleError(res, error.message);
+  }
+};
+
+export const getTask = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.uuid) {
+      return handleError(
+        res,
+        "User not authenticated or UUID not available",
+        401
+      );
+    }
+    const taskId = req.params.id;
+    //const taskId = req.query.id as string;
+    console.log(taskId);
+    const response = await Task.findOne({
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "date",
+      ],
+      where: {
+        userId: req.user.uuid,
+        id: taskId,
       },
     });
 
@@ -65,7 +93,6 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
       401
     );
   }
-  console.log(req.user.uuid);
 
   try {
     const newTask = await Task.create({
@@ -90,12 +117,77 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user?.uuid) {
+    return handleError(
+      res,
+      "User not authenticated or UUID not available",
+      401
+    );
+  }
+
+  const taskId = req.params.id;
+
+  try {
+    const task = await Task.findOne({
+      where: {
+        id: taskId,
+        userId: req.user.uuid, // Ensure the task belongs to the authenticated user
+      },
+    });
+
+    if (!task) {
+      return res
+        .status(404)
+        .json({
+          msg: "Task not found or you don't have permission to update it",
+        });
+    }
+
+    const { title, description, date } = req.body as CreateRequestBody;
+
+    await Task.update(
+      {
+        title,
+        description,
+        date,
+      },
+      {
+        where: {
+          id: taskId,
+          userId: req.user.uuid,
+        },
+      }
+    );
+
+    // Fetch the updated task to return in the response
+    const updatedTask = await Task.findOne({
+      where: {
+        id: taskId,
+        userId: req.user.uuid,
+      },
+    });
+
+    return res.status(200).json({
+      msg: "Tarea actualizada correctamente",
+      task: updatedTask,
+    });
+  } catch (error: any) {
+    return handleError(res, `Error al actualizar la tarea: ${error.message}`);
+  }
+};
+
+
 export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.uuid) {
-      return handleError(res, "User not authenticated or UUID not available", 401);
+      return handleError(
+        res,
+        "User not authenticated or UUID not available",
+        401
+      );
     }
-    
+
     // Find the task using a query builder approach for clarity
     const task = await Task.findOne({
       where: {
@@ -103,7 +195,7 @@ export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
         userId: req.user.uuid,
       },
     });
-    console.log(task)
+    console.log(task);
 
     if (!task) {
       return res.status(404).json({ msg: "Data not found" });

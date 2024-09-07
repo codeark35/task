@@ -10,7 +10,6 @@ import {
 
 const TaskContext = createContext();
 
-
 export const useTasks = () => {
   const context = useContext(TaskContext);
   if (!context) throw new Error("useTasks must be used within a TaskProvider");
@@ -19,7 +18,6 @@ export const useTasks = () => {
 
 export function TaskProvider({ children }) {
   const [tasks, setTasks] = useState([]);
-  
 
   const getTasks = async () => {
     const res = await getTasksRequest();
@@ -35,16 +33,16 @@ export function TaskProvider({ children }) {
     }
   };
   const createTask = async (task) => {
-
     try {
       const res = await createTaskRequest(task);
-      if(res.status === 201) return res.data;
+      if (res.status === 201) return res.data;
     } catch (error) {
       console.log(error);
     }
   };
 
   const updateTask = async (id, task) => {
+    //console.log(id)
     try {
       await updateTaskRequest(id, task);
     } catch (error) {

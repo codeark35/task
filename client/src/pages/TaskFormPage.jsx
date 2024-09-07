@@ -35,7 +35,7 @@ export function TaskFormPage() {
 
       const timer = setTimeout(() => {
         navigate("/tasks");
-      }, 500);
+      }, 800);
 
       return () => clearTimeout(timer);
     } catch (error) {

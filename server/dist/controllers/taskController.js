@@ -9,8 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTask = exports.createTask = exports.getTasks = void 0;
-const sequelize_1 = require("sequelize");
+exports.deleteTask = exports.updateTask = exports.createTask = exports.getTask = exports.getTasks = void 0;
 const task_1 = require("../models/task");
 // Error handling function
 const handleError = (res, message, status = 500) => {
@@ -29,10 +28,7 @@ const getTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 "id",
                 "title",
                 "description",
-                [
-                    sequelize_1.Sequelize.fn("date_format", sequelize_1.Sequelize.col("date"), "%d-%m-%Y"),
-                    "date",
-                ],
+                "date",
             ],
             where: {
                 userId: req.user.uuid,
@@ -45,14 +41,41 @@ const getTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getTasks = getTasks;
+const getTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    try {
+        if (!((_b = req.user) === null || _b === void 0 ? void 0 : _b.uuid)) {
+            return handleError(res, "User not authenticated or UUID not available", 401);
+        }
+        const taskId = req.params.id;
+        //const taskId = req.query.id as string;
+        console.log(taskId);
+        const response = yield task_1.Task.findOne({
+            attributes: [
+                "id",
+                "title",
+                "description",
+                "date",
+            ],
+            where: {
+                userId: req.user.uuid,
+                id: taskId,
+            },
+        });
+        return res.status(200).json(response);
+    }
+    catch (error) {
+        return handleError(res, error.message);
+    }
+});
+exports.getTask = getTask;
 // Create a new task
 const createTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
+    var _c;
     const { title, description, date } = req.body;
-    if (!((_b = req.user) === null || _b === void 0 ? void 0 : _b.uuid)) {
+    if (!((_c = req.user) === null || _c === void 0 ? void 0 : _c.uuid)) {
         return handleError(res, "User not authenticated or UUID not available", 401);
     }
-    console.log(req.user.uuid);
     try {
         const newTask = yield task_1.Task.create({
             title,
@@ -76,10 +99,58 @@ const createTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createTask = createTask;
-const deleteTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c;
+const updateTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _d;
+    if (!((_d = req.user) === null || _d === void 0 ? void 0 : _d.uuid)) {
+        return handleError(res, "User not authenticated or UUID not available", 401);
+    }
+    const taskId = req.params.id;
     try {
-        if (!((_c = req.user) === null || _c === void 0 ? void 0 : _c.uuid)) {
+        const task = yield task_1.Task.findOne({
+            where: {
+                id: taskId,
+                userId: req.user.uuid, // Ensure the task belongs to the authenticated user
+            },
+        });
+        if (!task) {
+            return res
+                .status(404)
+                .json({
+                msg: "Task not found or you don't have permission to update it",
+            });
+        }
+        const { title, description, date } = req.body;
+        yield task_1.Task.update({
+            title,
+            description,
+            date,
+        }, {
+            where: {
+                id: taskId,
+                userId: req.user.uuid,
+            },
+        });
+        // Fetch the updated task to return in the response
+        const updatedTask = yield task_1.Task.findOne({
+            where: {
+                id: taskId,
+                userId: req.user.uuid,
+            },
+        });
+        return res.status(200).json({
+            msg: "Tarea actualizada correctamente",
+            task: updatedTask,
+        });
+    }
+    catch (error) {
+        return handleError(res, `Error al actualizar la tarea: ${error.message}`);
+    }
+});
+exports.updateTask = updateTask;
+const deleteTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _e;
+    try {
+        if (!((_e = req.user) === null || _e === void 0 ? void 0 : _e.uuid)) {
             return handleError(res, "User not authenticated or UUID not available", 401);
         }
         // Find the task using a query builder approach for clarity

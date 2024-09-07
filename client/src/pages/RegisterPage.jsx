@@ -36,7 +36,7 @@ function Register() {
           <Label htmlFor="email">Correo electrónico:</Label>
           <Input
             name="email"
-            placeholder="youremail@domain.tld"
+            placeholder="mail@domain.yz"
             {...register("email")}
             autoFocus
           />
@@ -66,7 +66,7 @@ function Register() {
             <p className="text-danger">{errors.last_name?.message}</p>
           )}
 
-          <Label htmlFor="password">Password:</Label>
+          <Label htmlFor="password">Contraseña:</Label>
           <Input
             type="password"
             name="password"
