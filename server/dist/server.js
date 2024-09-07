@@ -16,8 +16,10 @@ const express_1 = __importDefault(require("express"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const userRoute_1 = __importDefault(require("./routes/userRoute"));
+const taskRoute_1 = __importDefault(require("./routes/taskRoute"));
 const authRoute_1 = __importDefault(require("./routes/authRoute"));
 const db_connection_1 = __importDefault(require("./connections/db-connection"));
+const associations_1 = require("./models/associations");
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -39,6 +41,7 @@ class Server {
             try {
                 yield db_connection_1.default.sync();
                 console.log("***Conexion establecida con la base de datos***");
+                (0, associations_1.setupAssociations)();
             }
             catch (error) {
                 console.log(error);
@@ -46,8 +49,14 @@ class Server {
         });
     }
     midlewares() {
-        this.app.use((0, cors_1.default)({ origin: "http://localhost:5173" })); // Permite todas las solicitudes desde cualquier origen
+        this.app.use((0, cors_1.default)({
+            origin: "http://localhost:5173",
+            credentials: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ["Content-Type", "Authorization"],
+        }));
         this.app.use(express_1.default.json());
+        // this.app.use(verifyUser); 
     }
     routes() {
         this.app.get("/", (req, res) => {
@@ -55,6 +64,7 @@ class Server {
         });
         this.app.use((0, cookie_parser_1.default)()); // Agrega esto antes de tus rutas
         this.app.use("/v1/api/", userRoute_1.default);
+        this.app.use("/v1/api/", taskRoute_1.default);
         this.app.use("/v1/api/auth/", authRoute_1.default);
         this.app.use((error, req, res, next) => {
             if (res.headersSent) {

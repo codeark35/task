@@ -33,7 +33,11 @@ export function TaskFormPage() {
         });
       }
 
-      // navigate("/tasks");
+      const timer = setTimeout(() => {
+        navigate("/tasks");
+      }, 800);
+
+      return () => clearTimeout(timer);
     } catch (error) {
       console.log(error);
       // window.location.href = "/";
@@ -64,6 +68,7 @@ export function TaskFormPage() {
           type="text"
           name="title"
           placeholder="Title"
+          required
           {...register("title")}
           autoFocus
         />
@@ -77,11 +82,12 @@ export function TaskFormPage() {
           id="description"
           rows="3"
           placeholder="Description"
+          required
           {...register("description")}
         ></Textarea>
 
         <Label htmlFor="date">Date</Label>
-        <Input type="date" name="date" {...register("date")} />
+        <Input type="date" name="date" required {...register("date")} />
         <Button>Save</Button>
       </form>
     </Card>

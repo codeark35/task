@@ -1,45 +1,37 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { User } from "../models/user";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-interface DecodedToken {
-  uuid: string;
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    uuid: string;
+  };
 }
 
-export const verifyUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const verifyUser = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+ // console.log('All request headers:', req.headers);
+  
+  const authHeader = req.header('Authorization');
+ // console.log('Authorization header:', authHeader);
+
+  const token = authHeader?.split(' ')[1];
+ // console.log('Extracted token:', token);
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
   try {
-    const headerToken = req.headers["authorization"];
-
-    if (!headerToken || !headerToken.startsWith("Bearer ")) {
-      return res.status(401).json({ msg: "Token no encontrado" });
-    }
-
-    const token = headerToken.split(" ")[1];
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "aRex&37zK0I&hccV*V!0z%GMx1089yiUt$o9vfAivcP6H#L*dyG0gF^e&ue"
-    ) as DecodedToken;
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string, uuid: string };
+   // console.log('Decoded token:', decoded);
     req.user = decoded;
-
-    // Verificar si el usuario existe en la base de datos
-    const user = await User.findOne({
-      where: { uuid: decoded.uuid },
-    });
-
-    if (!user) {
-      return res.status(401).json({ msg: "Usuario no autorizado" });
-    }
-
     next();
   } catch (error) {
-    if (error instanceof Error) {
-      return res.status(401).json({ msg: "Token inválido" });
+    console.error('Token verification error:', error);
+    if (error instanceof jwt.JsonWebTokenError) {
+      console.log('JWT Error:', error.message);
     }
-    return res.status(500).json({ msg: "Error interno del servidor" });
+    res.status(401).json({ message: 'Invalid token' });
   }
+
 };

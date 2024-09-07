@@ -1,15 +1,23 @@
-import { Table, Column, Model, DataType } from "sequelize-typescript";
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  TableOptions,
+  HasMany,
+} from "sequelize-typescript";
+import { Task } from "./task";
 
 @Table({
-  timestamps: true,
   tableName: "users",
+  timestamps: true,
   modelName: "User",
-})
-export class User extends Model {
+} as TableOptions)
+export class User extends Model<User> {
   @Column({
-    primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
+    primaryKey: true,
     allowNull: false,
     validate: {
       notEmpty: true,
@@ -57,4 +65,7 @@ export class User extends Model {
     },
   })
   role!: string;
+
+  @HasMany(() => Task)
+  tasks!: Task[];
 }

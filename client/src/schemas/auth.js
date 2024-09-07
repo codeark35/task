@@ -18,6 +18,13 @@ export const registerSchema = z
       .min(3, {
         message: "El nombre de usuario debe tener al menos 3 caracteres",
       }),
+      last_name: z
+      .string({
+        required_error: "El apellido es obligatorio",
+      })
+      .min(4, {
+        message: "El apellido debe tener al menos 4 caracteres",
+      }),
     email: z.string().email({
       message: "Por favor, introduce una dirección de correo electrónico válida",
     }),

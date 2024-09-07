@@ -28,7 +28,7 @@ function Register() {
   return (
     <div className="h-[calc(100vh-100px)] flex items-center justify-center">
       <Card>
-        {registerErrors.map((error, i) => (
+        {registerErrors?.map((error, i) => (
           <Message message={error} key={i} />
         ))}
         <h1 className="text-3xl font-bold">Registro de Usuario</h1>
@@ -36,8 +36,9 @@ function Register() {
           <Label htmlFor="email">Correo electrónico:</Label>
           <Input
             name="email"
-            placeholder="youremail@domain.tld"
+            placeholder="mail@domain.yz"
             {...register("email")}
+            autoFocus
           />
           {errors.email?.message && (
             <p className="text-danger">{errors.email?.message}</p>
@@ -48,7 +49,7 @@ function Register() {
             name="name"
             placeholder="Escribe tu Nombre"
             {...register("name")}
-            autoFocus
+            
           />
           {errors.name?.message && (
             <p className="text-danger">{errors.name?.message}</p>
@@ -59,13 +60,13 @@ function Register() {
             name="last_name"
             placeholder="Escribe tu Apellido"
             {...register("last_name")}
-            autoFocus
+           
           />
           {errors.last_name?.message && (
             <p className="text-danger">{errors.last_name?.message}</p>
           )}
 
-          <Label htmlFor="password">Password:</Label>
+          <Label htmlFor="password">Contraseña:</Label>
           <Input
             type="password"
             name="password"

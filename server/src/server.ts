@@ -2,8 +2,11 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import routerUser from "./routes/userRoute";
+import routerTask from "./routes/taskRoute";
 import routerAuth from "./routes/authRoute";
 import db from "./connections/db-connection";
+import { setupAssociations } from "./models/associations";
+import { verifyUser } from "./middlewares/authUser";
 
 class Server {
   private app: Application;
@@ -32,22 +35,32 @@ class Server {
     try {
       await db.sync();
       console.log("***Conexion establecida con la base de datos***");
+      setupAssociations();
     } catch (error) {
       console.log(error);
     }
   }
 
   midlewares() {
-    this.app.use(cors({ origin: "http://localhost:5173" })); // Permite todas las solicitudes desde cualquier origen
+    this.app.use(
+      cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })
+    ); 
     this.app.use(express.json());
+    // this.app.use(verifyUser); 
   }
   routes() {
     this.app.get("/", (req: Request, res: Response) => {
       res.send("Welcome to the API!");
     });
-    
+
     this.app.use(cookieParser()); // Agrega esto antes de tus rutas
     this.app.use("/v1/api/", routerUser);
+    this.app.use("/v1/api/", routerTask);
     this.app.use("/v1/api/auth/", routerAuth);
 
     this.app.use(

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+
 import {
   createTaskRequest,
   deleteTaskRequest,
@@ -23,24 +24,6 @@ export function TaskProvider({ children }) {
     setTasks(res.data);
   };
 
-  const deleteTask = async (id) => {
-    try {
-      const res = await deleteTaskRequest(id);
-      if (res.status === 204) setTasks(tasks.filter((task) => task._id !== id));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const createTask = async (task) => {
-    try {
-      const res = await createTaskRequest(task);
-      console.log(res.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const getTask = async (id) => {
     try {
       const res = await getTaskRequest(id);
@@ -49,12 +32,29 @@ export function TaskProvider({ children }) {
       console.error(error);
     }
   };
+  const createTask = async (task) => {
+    try {
+      const res = await createTaskRequest(task);
+      if (res.status === 201) return res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const updateTask = async (id, task) => {
+    //console.log(id)
     try {
       await updateTaskRequest(id, task);
     } catch (error) {
       console.error(error);
+    }
+  };
+  const deleteTask = async (id) => {
+    try {
+      const res = await deleteTaskRequest(id);
+      if (res.status === 204) setTasks(tasks.filter((task) => task.id !== id));
+    } catch (error) {
+      console.log(error);
     }
   };
 
