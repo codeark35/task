@@ -25,7 +25,7 @@ api.interceptors.response.use((response) => {
     console.log('No autorizado, redirigiendo al inicio de sesión');
     localStorage.removeItem('token'); // Eliminar el token inválido
     // Implementa tu lógica de redirección aquí, por ejemplo:
-     window.location.href = '/login';
+    // window.location.href = '/login';
   }
   return Promise.reject(error);
 });
