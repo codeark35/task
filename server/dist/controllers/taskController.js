@@ -24,12 +24,7 @@ const getTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return handleError(res, "User not authenticated or UUID not available", 401);
         }
         const response = yield task_1.Task.findAll({
-            attributes: [
-                "id",
-                "title",
-                "description",
-                "date",
-            ],
+            attributes: ["id", "title", "description", "date"],
             where: {
                 userId: req.user.uuid,
             },
@@ -51,12 +46,7 @@ const getTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         //const taskId = req.query.id as string;
         console.log(taskId);
         const response = yield task_1.Task.findOne({
-            attributes: [
-                "id",
-                "title",
-                "description",
-                "date",
-            ],
+            attributes: ["id", "title", "description", "date"],
             where: {
                 userId: req.user.uuid,
                 id: taskId,
@@ -113,9 +103,7 @@ const updateTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
         });
         if (!task) {
-            return res
-                .status(404)
-                .json({
+            return res.status(404).json({
                 msg: "Task not found or you don't have permission to update it",
             });
         }
@@ -160,7 +148,6 @@ const deleteTask = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 userId: req.user.uuid,
             },
         });
-        console.log(task);
         if (!task) {
             return res.status(404).json({ msg: "Data not found" });
         }

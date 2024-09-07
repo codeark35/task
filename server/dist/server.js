@@ -13,20 +13,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const compression_1 = __importDefault(require("compression"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const morgan_1 = __importDefault(require("morgan"));
+const winston_1 = __importDefault(require("winston"));
 const userRoute_1 = __importDefault(require("./routes/userRoute"));
 const taskRoute_1 = __importDefault(require("./routes/taskRoute"));
 const authRoute_1 = __importDefault(require("./routes/authRoute"));
 const db_connection_1 = __importDefault(require("./connections/db-connection"));
 const associations_1 = require("./models/associations");
+// Crear logger con Winston
+const logger = winston_1.default.createLogger({
+    level: "info",
+    format: winston_1.default.format.json(),
+    transports: [
+        new winston_1.default.transports.File({ filename: "error.log", level: "error" }),
+        new winston_1.default.transports.File({ filename: "combined.log" }),
+    ],
+});
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
         this.port = process.env.APP_PORT || "3000";
         this.listen();
         this.conectDB();
-        this.midlewares();
+        this.middlewares();
         this.routes();
     }
     listen() {
@@ -48,30 +62,57 @@ class Server {
             }
         });
     }
-    midlewares() {
+    middlewares() {
+        // Helmet para seguridad de cabeceras
+        this.app.use((0, helmet_1.default)());
+        // Compresión para optimizar el tamaño de las respuestas
+        this.app.use((0, compression_1.default)());
+        // Rate limiting para limitar solicitudes por IP
+        const limiter = (0, express_rate_limit_1.default)({
+            windowMs: 15 * 60 * 1000,
+            max: 100,
+            message: "Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.",
+        });
+        this.app.use(limiter);
+        // Logger de solicitudes HTTP con Morgan
+        this.app.use((0, morgan_1.default)("combined", {
+            stream: {
+                write: (message) => logger.info(message.trim()),
+            },
+        }));
+        // CORS configurado para permitir solicitudes desde dominios específicos
         this.app.use((0, cors_1.default)({
             origin: "http://localhost:5173",
-            credentials: true,
-            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            credentials: false,
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             allowedHeaders: ["Content-Type", "Authorization"],
         }));
+        // Body parser para recibir JSON en el cuerpo de la solicitud
         this.app.use(express_1.default.json());
-        // this.app.use(verifyUser); 
+        // Analizador de cookies
+        this.app.use((0, cookie_parser_1.default)());
     }
+    // Rutas de la aplicación
     routes() {
         this.app.get("/", (req, res) => {
             res.send("Welcome to the API!");
         });
-        this.app.use((0, cookie_parser_1.default)()); // Agrega esto antes de tus rutas
+        // Definición de rutas
         this.app.use("/v1/api/", userRoute_1.default);
         this.app.use("/v1/api/", taskRoute_1.default);
         this.app.use("/v1/api/auth/", authRoute_1.default);
+        // Manejo global de errores
         this.app.use((error, req, res, next) => {
             if (res.headersSent) {
                 return next(error);
             }
-            console.error(error);
-            res.status(500).send("Something broke! " + error.message);
+            logger.error(error.message);
+            res
+                .status(500)
+                .json({
+                message: "Algo salió mal en el servidor.",
+                error: error.message,
+            });
         });
     }
 }

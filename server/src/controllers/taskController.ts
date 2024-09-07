@@ -34,12 +34,7 @@ export const getTasks = async (req: AuthenticatedRequest, res: Response) => {
       );
     }
     const response = await Task.findAll({
-      attributes: [
-        "id",
-        "title",
-        "description",
-        "date",
-      ],
+      attributes: ["id", "title", "description", "date"],
       where: {
         userId: req.user.uuid,
       },
@@ -64,12 +59,7 @@ export const getTask = async (req: AuthenticatedRequest, res: Response) => {
     //const taskId = req.query.id as string;
     console.log(taskId);
     const response = await Task.findOne({
-      attributes: [
-        "id",
-        "title",
-        "description",
-        "date",
-      ],
+      attributes: ["id", "title", "description", "date"],
       where: {
         userId: req.user.uuid,
         id: taskId,
@@ -137,11 +127,9 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!task) {
-      return res
-        .status(404)
-        .json({
-          msg: "Task not found or you don't have permission to update it",
-        });
+      return res.status(404).json({
+        msg: "Task not found or you don't have permission to update it",
+      });
     }
 
     const { title, description, date } = req.body as CreateRequestBody;
@@ -177,7 +165,6 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-
 export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.uuid) {
@@ -195,7 +182,6 @@ export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
         userId: req.user.uuid,
       },
     });
-    console.log(task);
 
     if (!task) {
       return res.status(404).json({ msg: "Data not found" });
